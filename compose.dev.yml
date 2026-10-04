@@ -1,0 +1,10 @@
+# Only local development: backend runs on the host, DB remains in Docker.
+services:
+  mariadb:
+    ports:
+      - "127.0.0.1:${DB_PORT:-3307}:3306"
+networks:
+  database:
+    # Docker Desktop does not forward host ports into an internal-only network.
+    # Base Compose stays internal; this local override permits loopback access.
+    internal: false

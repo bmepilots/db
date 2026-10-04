@@ -1,0 +1,32 @@
+name: bmepilots
+services:
+  mariadb:
+    image: mariadb:11.8.8
+    restart: unless-stopped
+    environment:
+      MARIADB_DATABASE: ${MARIADB_DATABASE:?Run scripts/setup.ps1 first}
+      MARIADB_USER: ${MARIADB_USER:?Run scripts/setup.ps1 first}
+      MARIADB_PASSWORD: ${MARIADB_PASSWORD:?Set a database password}
+      MARIADB_ROOT_PASSWORD: ${MARIADB_ROOT_PASSWORD:?Set a root password}
+      TZ: UTC
+    command: ["--character-set-server=utf8mb4", "--collation-server=utf8mb4_unicode_ci", "--default-time-zone=+00:00"]
+    volumes:
+      - mariadb_data:/var/lib/mysql
+    networks: [database]
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+networks:
+  database:
+    internal: true
+volumes:
+  mariadb_data:
+    name: bmepilots_mariadb_data

@@ -1,0 +1,22 @@
+# Disposable integration-test database. Never points at the development volume.
+name: bmepilots-tests
+services:
+  mariadb-test:
+    image: mariadb:11.8.8
+    environment:
+      MARIADB_DATABASE: bmepilots_test
+      MARIADB_USER: bmepilots_test
+      MARIADB_PASSWORD: ${MARIADB_PASSWORD:?Run scripts/setup.ps1}
+      MARIADB_ROOT_PASSWORD: ${MARIADB_ROOT_PASSWORD:?Run scripts/setup.ps1}
+      TZ: UTC
+    command: ["--character-set-server=utf8mb4", "--collation-server=utf8mb4_unicode_ci", "--default-time-zone=+00:00"]
+    tmpfs:
+      - /var/lib/mysql
+    ports:
+      - "127.0.0.1:3308:3306"
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 3s
+      timeout: 5s
+      retries: 20
+      start_period: 15s
