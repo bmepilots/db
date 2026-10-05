@@ -1,0 +1,13 @@
+services:
+  backend:
+    environment:
+      DB_USER: bmepilots_runtime
+      DB_PASSWORD_FILE: /run/secrets/db_runtime_password
+      FLYWAY_USER: ${MARIADB_USER:-bmepilots}
+      FLYWAY_PASSWORD_FILE: /run/secrets/db_password
+    secrets:
+      - db_runtime_password
+
+secrets:
+  db_runtime_password:
+    file: ./secrets/db_runtime_password

@@ -1,0 +1,11 @@
+[Unit]
+Description=Check BME Pilots application releases every five minutes
+
+[Timer]
+OnBootSec=3min
+OnUnitInactiveSec=5min
+RandomizedDelaySec=30s
+Unit=bmepilots-update.service
+
+[Install]
+WantedBy=timers.target

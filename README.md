@@ -1,6 +1,6 @@
 # BME Pilots 2026 · Database
 
-Docker MariaDB infrastructure and the canonical full-stack Ubuntu VM deployment for the **unofficial BME Professional Pilot 2026 community portal**. This is one of three independent sibling repositories (`db`, `backend`, `frontend`). The future domain is bmepilots2026.com. The current deployment stage uses private loopback HTTP through SSH forwarding; public HTTPS and Cloudflare remain future work. See `docs/STATUS.md` for actual run evidence.
+Docker MariaDB infrastructure and the canonical full-stack Ubuntu VM deployment for the **unofficial BME Professional Pilot 2026 community portal**. This is one of three independent sibling repositories (`db`, `backend`, `frontend`). The domain is bmepilots2026.com. Deployment supports SSH preview and Cloudflare HTTPS, automatic verified application images, local backup scheduling and separate runtime SQL privileges. See `docs/STATUS.md` for actual activation/run evidence.
 
 ## Start on Windows
 
@@ -30,7 +30,7 @@ The base Compose publishes **no ports** and uses an internal network. The local 
 
 VM persistence uses bind directories on `/srv/bmepilots`: `mariadb`, `documents`, `attachments`, `logs` and `backups`. These are separate from the development named volume below. Credentials live in ignored deployment secret files; backend-readable files use `root:10001` and mode `0640`, and the root database password remains `root:root` mode `0600`. Never put passwords in the image or committed configuration. Preparation does not format or reset the data disk.
 
-Public HTTPS, Cloudflare, automatic compatible-image updates, separate runtime/migration database privileges, and scheduled encrypted offsite backups with restore rehearsals remain follow-up work. CI configuration in the application repos is not proof of a successful workflow run or a published image. The VM should use verified immutable image references; read the deployment runbook before any update.
+`deploy/compose.public.yml` supplies Cloudflare and narrow proxy trust; `compose.runtime-db.yml` separates runtime/migration credentials after explicit provisioning. The updater follows successful main workflows, checks API contract/revision labels and uses immutable image digests with backup/health/rollback guards. Daily local backups retain seven days by default and always keep the newest completed copy. Infrastructure versions/configuration are deliberately updated by an operator. Encrypted offsite copies and external health notifications need further configuration. Read the deployment runbook before changing installed operations.
 
 ## Development persistence and lifecycle
 
@@ -58,4 +58,4 @@ Document and mail file bytes live outside MariaDB in the backend's private `stor
 - `docs/ARCHITECTURE.md`: topology, responsibilities and data conventions.
 - `docs/OPERATIONS.md`: maintenance, troubleshooting, backup and recovery.
 - `docs/STATUS.md`: verified state, limitations and next steps; update on every change.
-- `deploy/README.md`: canonical private Ubuntu VM deployment and operator runbook.
+- `deploy/README.md`: canonical Ubuntu VM deployment, Cloudflare, updates and recovery runbook.

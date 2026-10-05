@@ -1,0 +1,11 @@
+[Unit]
+Description=Daily BME Pilots local backup at 03:15 Budapest time
+
+[Timer]
+OnCalendar=*-*-* 03:15:00 Europe/Budapest
+Persistent=true
+RandomizedDelaySec=5min
+Unit=bmepilots-backup.service
+
+[Install]
+WantedBy=timers.target

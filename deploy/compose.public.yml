@@ -1,0 +1,64 @@
+services:
+  backend:
+    environment:
+      COOKIE_SECURE: "true"
+      SERVER_FORWARD_HEADERS_STRATEGY: native
+      SERVER_TOMCAT_REMOTEIP_INTERNAL_PROXIES: '172[.]30[.]27[.]2'
+    networks:
+      backend:
+        ipv4_address: 172.30.27.3
+      database: {}
+      egress: {}
+
+  frontend:
+    environment:
+      CADDY_TRUSTED_PROXY: 172.30.26.2/32
+    networks:
+      edge:
+        ipv4_address: 172.30.26.3
+      backend:
+        ipv4_address: 172.30.27.2
+
+  cloudflared:
+    # Official 2026.9.3 multi-architecture manifest, verified 2026-10-05.
+    image: cloudflare/cloudflared:2026.9.3@sha256:072c067d25ccbe61d46e18f0d0723255f2bb5304f7317caa95b27031520ff92c
+    restart: unless-stopped
+    command: ["tunnel", "--no-autoupdate", "--metrics", "127.0.0.1:2000", "run", "--token-file", "/run/secrets/cloudflare_tunnel_token"]
+    user: "65532:65532"
+    secrets:
+      - cloudflare_tunnel_token
+    networks:
+      edge:
+        ipv4_address: 172.30.26.2
+    depends_on:
+      frontend:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "cloudflared", "tunnel", "--metrics", "127.0.0.1:2000", "ready"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    read_only: true
+    cap_drop: [ALL]
+    security_opt:
+      - no-new-privileges:true
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "3"
+
+secrets:
+  cloudflare_tunnel_token:
+    file: ${CLOUDFLARE_TOKEN_SECRET_FILE:-./secrets/cloudflare_tunnel_token}
+
+networks:
+  edge:
+    ipam:
+      config:
+        - subnet: 172.30.26.0/28
+  backend:
+    ipam:
+      config:
+        - subnet: 172.30.27.0/28

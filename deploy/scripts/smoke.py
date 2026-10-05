@@ -1,6 +1,7 @@
 """VM-only operator check. Run with sudo; never prints credentials or cookies."""
 import http.cookiejar
 import json
+import os
 import pathlib
 import sys
 import urllib.error
@@ -9,7 +10,7 @@ import uuid
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 STATE = ROOT / '.smoke-state.json'
-BASE = 'http://127.0.0.1:8088'
+BASE = os.environ.get('BMEPILOTS_SMOKE_URL', 'http://127.0.0.1:8088').rstrip('/')
 opener = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(http.cookiejar.CookieJar()))
 
 
@@ -33,7 +34,7 @@ def request(path, method='GET', data=None, content_type=None, expected=200):
 
 
 mode = sys.argv[1]
-assert mode in ('create', 'verify'), 'Use create before recreation, verify afterward.'
+assert mode in ('create', 'create-staged', 'verify'), 'Use create/create-staged before recreation, verify afterward.'
 request('/login')
 request('/documents')  # SPA deep-link fallback
 request('/api/v1/users/me', expected=401)
@@ -47,15 +48,24 @@ for path in ('/users/me', '/dashboard', '/documents', '/links', '/admin/audit-lo
     request('/api/v1' + path)
 
 payload = b'BME Pilots VM persistence verification.\n'
-if mode == 'create':
+if mode in ('create', 'create-staged'):
     assert not STATE.exists(), 'Previous verification state exists; verify it before another run.'
     boundary = uuid.uuid4().hex
     parts = []
-    for name, value in [('title', 'Deployment verification'), ('description', 'Temporary operator test; removed after verification.')]:
-        parts.append(f'--{boundary}\r\nContent-Disposition: form-data; name="{name}"\r\n\r\n{value}\r\n'.encode())
-    parts.append(f'--{boundary}\r\nContent-Disposition: form-data; name="files"; filename="verification.txt"\r\nContent-Type: text/plain\r\n\r\n'.encode() + payload + b'\r\n')
+    if mode == 'create':
+        for name, value in [('title', 'Deployment verification'), ('description', 'Temporary operator test; removed after verification.')]:
+            parts.append(f'--{boundary}\r\nContent-Disposition: form-data; name="{name}"\r\n\r\n{value}\r\n'.encode())
+    field = 'file' if mode == 'create-staged' else 'files'
+    parts.append(f'--{boundary}\r\nContent-Disposition: form-data; name="{field}"; filename="verification.txt"\r\nContent-Type: text/plain\r\n\r\n'.encode() + payload + b'\r\n')
     parts.append(f'--{boundary}--\r\n'.encode())
-    post = json.loads(request('/api/v1/documents', 'POST', b''.join(parts), f'multipart/form-data; boundary={boundary}', 201))
+    if mode == 'create-staged':
+        upload = json.loads(request('/api/v1/documents/uploads', 'POST', b''.join(parts), f'multipart/form-data; boundary={boundary}', 201))
+        post = json.loads(request('/api/v1/documents', 'POST', {
+            'title': 'Deployment verification', 'description': 'Temporary operator test; removed after verification.',
+            'uploadIds': [upload['id']],
+        }, expected=201))
+    else:
+        post = json.loads(request('/api/v1/documents', 'POST', b''.join(parts), f'multipart/form-data; boundary={boundary}', 201))
     STATE.write_text(json.dumps({'postId': post['id']}))
     STATE.chmod(0o600)
     request('/api/v1/documents/' + post['id'] + '/comments', 'POST', {'body': 'Persistence check.'}, expected=201)

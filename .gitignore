@@ -10,3 +10,13 @@ deploy/secrets/*
 deploy/data/
 *.tgz
 deploy/.smoke-state.json
+deploy/.deployment-mode
+deploy/.runtime-db-enabled
+deploy/release.env
+deploy/release.previous.env
+deploy/release.pending.env
+deploy/automation.json
+deploy/update-state.json
+deploy/update-failure.json
+deploy/*.tmp
+__pycache__/

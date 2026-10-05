@@ -27,6 +27,11 @@ for name in db_password bootstrap_admin_password mail_app_password; do
 done
 chown root:root secrets/db_root_password
 chmod 0600 secrets/db_root_password
+if [[ -f secrets/cloudflare_tunnel_token ]]; then
+  [[ -s secrets/cloudflare_tunnel_token ]] || { echo 'Cloudflare token file is empty.' >&2; exit 1; }
+  chown root:65532 secrets/cloudflare_tunnel_token
+  chmod 0640 secrets/cloudflare_tunnel_token
+fi
 # This dedicated VM must not start Docker against empty paths on a missing data disk.
 install -d /etc/systemd/system/docker.service.d
 printf '[Unit]\nRequiresMountsFor=/srv/bmepilots\n' > /etc/systemd/system/docker.service.d/bmepilots-storage.conf

@@ -1,6 +1,6 @@
 # Local database operations
 
-Updated: 2026-10-04.
+Updated: 2026-10-05.
 
 ## Inspection
 Run commands from this repository. Use `docker compose -f compose.yml -f compose.dev.yml ps` and `docker compose logs --tail 100 mariadb`. Avoid printing expanded Compose configuration because environment values contain secrets; use `config --quiet` for validation.
@@ -14,7 +14,7 @@ The healthcheck tests connectivity and InnoDB initialization, not application sc
 Changing `.env` alone is insufficient after first initialization. Coordinate SQL ALTER USER with backend configuration, using a private operator session and without logging passwords. Root and application passwords are different. Keep existing volumes intact. For development, setup never overwrites existing credentials.
 
 ## Backup and restore
-Automated/offsite backup is deferred with production deployment. Before keeping valuable data, make an InnoDB-consistent `mariadb-dump --single-transaction` of the application database using a protected client options file. Never pass passwords on a command line or commit dumps. Store the dump with matching snapshots of **both** backend file stores: `storage/attachments` (MAIL_STORAGE) and `storage/documents` (DOCUMENT_STORAGE). Include application commit identifiers and Flyway schema version. These directories contain private bytes referenced by SQL rows; neither the dump nor a directory snapshot alone is a complete backup.
+Production local backup automation and isolated restore rehearsal are documented in `../deploy/README.md`; encrypted offsite transport still needs an operator-selected destination. Before keeping valuable data, make an InnoDB-consistent `mariadb-dump --single-transaction` of the application database using a protected client options file. Never pass passwords on a command line or commit dumps. Store the dump with matching snapshots of **both** backend file stores: `storage/attachments` (MAIL_STORAGE) and `storage/documents` (DOCUMENT_STORAGE). Include application commit identifiers and Flyway schema version. These directories contain private bytes referenced by SQL rows; neither the dump nor a directory snapshot alone is a complete backup.
 
 Pause mail synchronization and all content writes while coordinating the database and file snapshots; stopping the backend for this local operation is the simplest way to prevent concurrent uploads, deletes and imported attachments. Keep MariaDB running for the consistent dump. Resolve configured storage paths from the backend working directory, and preserve their private access permissions. Encrypt any offsite copy; keep recovery keys separately. Do not copy live database volume files as a substitute for a supported consistent backup.
 

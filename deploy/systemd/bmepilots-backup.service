@@ -1,0 +1,15 @@
+[Unit]
+Description=BME Pilots coordinated local backup
+After=docker.service
+Requires=docker.service
+RequiresMountsFor=/srv/bmepilots
+
+[Service]
+Type=oneshot
+WorkingDirectory=/srv/bmepilots/db/deploy
+ExecStart=/bin/bash /srv/bmepilots/db/deploy/scripts/backup.sh
+TimeoutStartSec=2h
+UMask=0077
+Nice=10
+IOSchedulingClass=best-effort
+IOSchedulingPriority=7

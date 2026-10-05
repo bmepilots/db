@@ -1,0 +1,9 @@
+{
+  "repositories": {
+    "backend": "bmepilots/backend",
+    "frontend": "bmepilots/frontend"
+  },
+  "settle_seconds": 120,
+  "minimum_free_bytes": 5368709120,
+  "backup_retention_days": 7
+}
