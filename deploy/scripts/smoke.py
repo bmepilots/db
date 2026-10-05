@@ -12,6 +12,7 @@ ROOT = pathlib.Path(__file__).resolve().parents[1]
 STATE = ROOT / '.smoke-state.json'
 BASE = os.environ.get('BMEPILOTS_SMOKE_URL', 'http://127.0.0.1:8088').rstrip('/')
 opener = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(http.cookiejar.CookieJar()))
+opener.addheaders = [('User-Agent', 'BMEPilotsDeploymentCheck/1.0')]
 
 
 def request(path, method='GET', data=None, content_type=None, expected=200):
