@@ -5,3 +5,8 @@ backups/
 *.sql.gz
 *.dump
 .DS_Store
+deploy/secrets/*
+!deploy/secrets/.gitkeep
+deploy/data/
+*.tgz
+deploy/.smoke-state.json

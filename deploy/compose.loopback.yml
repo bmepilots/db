@@ -1,0 +1,8 @@
+# Temporary private verification through SSH forwarding; never expose this HTTP port publicly.
+services:
+  backend:
+    environment:
+      COOKIE_SECURE: "false"
+  frontend:
+    ports:
+      - "127.0.0.1:8088:80"

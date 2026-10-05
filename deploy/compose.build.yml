@@ -1,0 +1,8 @@
+# Sibling repository layout: /srv/bmepilots/{backend,frontend,db/deploy}.
+services:
+  backend:
+    build:
+      context: ../../backend
+  frontend:
+    build:
+      context: ../../frontend

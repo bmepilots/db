@@ -1,0 +1,146 @@
+name: bmepilots-prod
+
+services:
+  mariadb:
+    image: mariadb:11.8.8
+    restart: unless-stopped
+    environment:
+      MARIADB_DATABASE: ${MARIADB_DATABASE:-bmepilots}
+      MARIADB_USER: ${MARIADB_USER:-bmepilots}
+      MARIADB_PASSWORD_FILE: /run/secrets/db_password
+      MARIADB_ROOT_PASSWORD_FILE: /run/secrets/db_root_password
+      TZ: UTC
+    secrets:
+      - db_password
+      - db_root_password
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+      - --default-time-zone=+00:00
+    volumes:
+      - type: bind
+        source: ${DATA_ROOT:?Set DATA_ROOT}/mariadb
+        target: /var/lib/mysql
+        bind:
+          create_host_path: false
+    networks:
+      - database
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "3"
+
+  backend:
+    image: ${BACKEND_IMAGE:-bmepilots-backend:local}
+    restart: unless-stopped
+    environment:
+      DB_URL: jdbc:mariadb://mariadb:3306/${MARIADB_DATABASE:-bmepilots}
+      DB_USER: ${MARIADB_USER:-bmepilots}
+      DB_PASSWORD_FILE: /run/secrets/db_password
+      SERVER_ADDRESS: 0.0.0.0
+      PORT: 8080
+      COOKIE_SECURE: ${COOKIE_SECURE:-true}
+      BOOTSTRAP_ADMIN_EMAIL: ${BOOTSTRAP_ADMIN_EMAIL:-}
+      BOOTSTRAP_ADMIN_PASSWORD_FILE: /run/secrets/bootstrap_admin_password
+      MAIL_ENABLED: ${MAIL_ENABLED:-false}
+      MAIL_USERNAME: ${MAIL_USERNAME:-}
+      MAIL_PASSWORD_FILE: /run/secrets/mail_app_password
+      MAIL_INTERVAL_MS: ${MAIL_INTERVAL_MS:-60000}
+      MAIL_INITIAL_DAYS: ${MAIL_INITIAL_DAYS:-90}
+      DOCUMENT_STORAGE: /var/lib/bmepilots/documents
+      MAIL_STORAGE: /var/lib/bmepilots/attachments
+      APP_LOG_FILE: /var/log/bmepilots/portal.log
+      JAVA_OPTS: ${JAVA_OPTS:--XX:MaxRAMPercentage=75}
+    secrets:
+      - db_password
+      - bootstrap_admin_password
+      - mail_app_password
+    volumes:
+      - type: bind
+        source: ${DATA_ROOT:?Set DATA_ROOT}/documents
+        target: /var/lib/bmepilots/documents
+        bind:
+          create_host_path: false
+      - type: bind
+        source: ${DATA_ROOT:?Set DATA_ROOT}/attachments
+        target: /var/lib/bmepilots/attachments
+        bind:
+          create_host_path: false
+      - type: bind
+        source: ${DATA_ROOT:?Set DATA_ROOT}/logs
+        target: /var/log/bmepilots
+        bind:
+          create_host_path: false
+    expose:
+      - "8080"
+    networks:
+      - backend
+      - database
+      - egress
+    mem_limit: 1536m
+    depends_on:
+      mariadb:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl --fail --silent http://127.0.0.1:8080/actuator/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 45s
+    security_opt:
+      - no-new-privileges:true
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "3"
+
+  frontend:
+    image: ${FRONTEND_IMAGE:-bmepilots-frontend:local}
+    restart: unless-stopped
+    expose:
+      - "80"
+    networks:
+      - edge
+      - backend
+    depends_on:
+      backend:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget --quiet --spider http://127.0.0.1/ || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    security_opt:
+      - no-new-privileges:true
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "3"
+
+networks:
+  edge:
+  egress:
+  backend:
+    internal: true
+  database:
+    internal: true
+
+secrets:
+  db_password:
+    file: ${DB_PASSWORD_SECRET_FILE:-./secrets/db_password}
+  db_root_password:
+    file: ${DB_ROOT_PASSWORD_SECRET_FILE:-./secrets/db_root_password}
+  bootstrap_admin_password:
+    file: ${BOOTSTRAP_ADMIN_PASSWORD_SECRET_FILE:-./secrets/bootstrap_admin_password}
+  mail_app_password:
+    file: ${MAIL_PASSWORD_SECRET_FILE:-./secrets/mail_app_password}

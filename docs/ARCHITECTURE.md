@@ -1,23 +1,32 @@
 # Database architecture
 
-Updated: 2026-10-04.
+Updated: 2026-10-05.
 
 ## Scope and ownership
-MariaDB runs exclusively in Docker. This repository supplies infrastructure; backend Flyway supplies application schema; frontend never connects to MariaDB. Compose project name and persistent volume names are fixed to prevent accidental creation of a fresh empty database during path changes.
+MariaDB runs exclusively in Docker. This repository supplies development database infrastructure and the canonical Ubuntu deployment under `deploy/`; backend Flyway supplies application schema; frontend never connects to MariaDB. The application repositories own their images. Development and deployment use distinct Compose projects and persistence paths to prevent accidental creation or reuse of the wrong database during path changes. The earlier unversioned deployment draft is superseded by `deploy/`.
 
 ## Network boundary
-Base Compose has a single internal `database` network and no published port. Local override binds TCP 3307 exclusively to IPv4 loopback for a host-run backend and sets the network internal flag to false: Docker Desktop otherwise fails to forward the host port. This development-only bridge allows egress; it does not expose the DB to the LAN. Base Compose remains internal. In a future containerized backend deployment, the backend would join the internal database network and a separate egress network. No such deployment is implemented here.
+The development base Compose has a single internal `database` network and no published port. Its local override binds TCP 3307 exclusively to IPv4 loopback for a host-run backend and sets the network internal flag to false: Docker Desktop otherwise fails to forward the host port. This development-only bridge allows egress; it does not expose the DB to the LAN. The base remains internal.
+
+The separate `deploy/compose.yml` base publishes no ports. MariaDB joins only the internal database network. The backend joins that database network, a separate internal API network and an egress network for Gmail IMAP. Caddy serves the static frontend and proxies `/api/*` to backend on the internal API network, retaining same-origin browser cookies. `compose.loopback.yml` publishes only Caddy at VM `127.0.0.1:8088` for SSH forwarding and sets non-Secure cookies for HTTP preview. Backend and DB ports remain unpublished. Public HTTPS/Cloudflare must use a reviewed configuration with Secure cookies, deliberate proxy trust and no public HTTP preview binding.
+
+## VM persistence and startup
+The VM stores persistent data in `/srv/bmepilots/{mariadb,documents,attachments,logs,backups}` on the mounted application disk. Development continues to use its named database volume. The deployment's bind mounts refuse automatic host-path creation, protecting against an accidental empty database when paths are wrong. `scripts/prepare.sh` verifies the mount, preserves secrets and prepares permissions; it installs a Docker systemd dependency on the data mount for this dedicated VM. `scripts/start.sh` checks the mount again and starts Compose with health checks and a bounded wait.
+
+The backend runtime UID/GID is `10001`. Documents, attachments and logs are writable by that identity; backend-mounted credential files are `root:10001` mode `0640`. The database root credential is `root:root` mode `0600`. Docker secrets are host files mounted under `/run/secrets`; their local permissions must permit the actual container identity to read them. Secret paths and configuration are distinct from secret values. The backend entrypoint reads database/bootstrap files, while the mail adapter reads its password file directly. No secret belongs in Git, an image, expanded diagnostic output or browser build inputs.
+
+MariaDB health checks gate backend startup; backend health gates the gateway. Restart policies support process recovery but do not replace backups or prove availability. Memory sessions are lost when backend restarts. Source workflow configuration can build/publish images, but automatic compatible-image rollout to the VM is future work and successful runs must be recorded separately in STATUS.
 
 ## Data conventions
 InnoDB and utf8mb4; the database service uses UTC. SQL migrations, indexes, constraints and UUID representation are documented in backend `docs/ARCHITECTURE.md`. Activity createdAt/updatedAt timestamps are UTC DATETIME values. Calendar startsAt/endsAt deliberately store Europe/Budapest civil time in DATETIME without implicit timezone conversion, with all-day end dates exclusive. Do not convert these calendar columns as if they were UTC instants.
 
-All application tables are managed by Flyway. Never use application root credentials; the app uses the database-scoped account initialized by MariaDB. The local account currently also runs migrations; split DDL and runtime privileges before production.
+All application tables are managed by Flyway. Never use application root credentials; the app uses the database-scoped account initialized by MariaDB. Development and the initial VM stack currently share this account with migrations; split DDL and runtime privileges before public production use.
 
 ## Community schema and storage
 
 Backend migration V5 creates document posts, files and comments, and copies legacy knowledge articles into text-only posts while retaining the original tables. V6 adds calendar events, useful-link author references and a General link category if categories are empty. V7 adds request method, safe route template, status and duration to the audit table. These are backend-owned migrations; do not add matching init SQL or edit applied migrations in this repository.
 
-MariaDB contains document metadata, comments, ownership, versions and private mail flags, but not uploaded file bytes. Backend `storage/documents` and `storage/attachments` (or their configured overrides) form part of the persistent data set. File storage and SQL transactions cannot be one atomic unit; the backend handles ordinary rollback/deletion cleanup, while crash orphan reconciliation remains deferred. Backup/restore must preserve both stores with the matching database, schema version and application revision.
+MariaDB contains document metadata, comments, ownership, versions and private mail flags, but not uploaded file bytes. Backend `storage/documents` and `storage/attachments` in development, or the VM directories `/srv/bmepilots/documents` and `/srv/bmepilots/attachments`, form part of the persistent data set. File storage and SQL transactions cannot be one atomic unit; the backend handles ordinary rollback/deletion cleanup, while crash orphan reconciliation remains deferred. Backup/restore must preserve both stores with the matching database, schema version and application revision. Scheduled encrypted offsite backups and restore rehearsals remain operational follow-ups; the VM's local backups directory alone provides neither.
 
 Named user activity and API request metadata are separate views over audit data. No passwords, credentials, cookies, query strings, payloads or document/mail bodies belong in logs. Audit rows have no automatic retention yet; increased request logging will grow the table. Define operational retention and restore testing before production, without deleting audit history ad hoc.
 

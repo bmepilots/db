@@ -1,6 +1,6 @@
 # Status and handoff
 
-Updated: 2026-10-04. Update this file with every change.
+Updated: 2026-10-05. Update this file with every change.
 
 ## Implemented
 - Dedicated Docker MariaDB repository, internal network and fixed persistent volume.
@@ -16,6 +16,16 @@ Updated: 2026-10-04. Update this file with every change.
 - Real MariaDB integration tests passed on 2026-10-04, including document storage boundaries/rollback, calendar/link relations, audit records and mail synchronization persistence. Test schema is bmepilots_test, development schema is bmepilots.
 
 ## Deferred
-- Production deployment, separate migration account, scheduled encrypted offsite backup.
+- Public HTTPS/Cloudflare, separate migration account, automated rollout and scheduled encrypted offsite backup remain pending.
 - No application schema here: backend Flyway owns it.
-- Uploaded document files and mail attachments are backend-owned private stores and must be backed up together with MariaDB; this repository only provides the database volume.
+- Uploaded documents and mail attachments are persisted alongside MariaDB on the VM data disk, but application storage/schema logic remains backend-owned.
+
+## Private VM deployment — 2026-10-05
+
+- Canonical configuration is versioned in db/deploy; the old _deployment-draft is superseded. Backend and frontend images were built on the Ubuntu 22.04.5 VM with Docker Engine 29.8.2 and Compose 5.6.0.
+- MariaDB 11.8.8, backend and frontend are healthy. Caddy serves the SPA and proxies /api from 127.0.0.1:8088; access is through SSH forwarding. No public tunnel is configured.
+- Persistent ext4 disk mounted at /srv/bmepilots contains MariaDB, documents, attachments and rolling logs. Docker has a RequiresMountsFor dependency; startup checks mount presence. Existing development DB3307 was not touched.
+- VM gateway checks passed: SPA/deep links, anonymous rejection, CSRF/login, authenticated dashboard/community/admin routes, upload/comment creation, logout rejection. Database metadata, comments and exact file bytes survived forced recreation of all three containers; only the test post was then removed.
+- Fresh per-VM random secrets were generated without printing passwords. Non-root backend storage ownership and group-readable secret permissions were verified by successful startup/upload. VM Gmail is disabled; local development Gmail settings were not copied.
+- A coordinated local backup stopped backend writes, captured MariaDB plus both file stores and image references, and restarted the existing backend. SHA256, gzip and tar integrity passed. Full restore rehearsal, scheduling and encrypted offsite copies are not yet implemented.
+- CI workflows passed actionlint 1.7.12/ShellCheck locally. GitHub-hosted execution and image publication remain unverified; the VM currently runs source-built images tagged vm-20261005, not registry images.
