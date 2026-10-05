@@ -51,7 +51,7 @@ On the workstation:
 ssh -N -L 127.0.0.1:8088:127.0.0.1:8088 bmepilots@192.168.1.170
 ```
 
-Keep the SSH session open and browse `http://127.0.0.1:8088/login`. This is separate from the development server on port 5173. The first administrator email is configured by `BOOTSTRAP_ADMIN_EMAIL`; the password is in `secrets/bootstrap_admin_password` on the VM. View it only in your own secure terminal with sudo, then change it through `/account`. Clear `BOOTSTRAP_ADMIN_EMAIL` afterward. Keep the referenced secret file while Compose mounts it; removing it breaks startup. Bootstrap never resets an existing admin. Registration starts closed.
+Keep the SSH session open and browse `http://localhost:8088/login`. Use localhost for this preview and 127.0.0.1 for development on port 5173: browser cookies are shared across ports, so different hostnames avoid the two independent sessions overwriting each other. The first administrator email is configured by `BOOTSTRAP_ADMIN_EMAIL`; the password is in `secrets/bootstrap_admin_password` on the VM. View it only in your own secure terminal with sudo, then change it through `/account`. Clear `BOOTSTRAP_ADMIN_EMAIL` afterward. Keep the referenced secret file while Compose mounts it; removing it breaks startup. Bootstrap never resets an existing admin. Registration starts closed.
 
 VM mail is disabled initially. To enable it later, supply the Gmail App Password in `secrets/mail_app_password`, preserve root:10001 mode 0640, and set `MAIL_ENABLED=true` and `MAIL_USERNAME`. Never print credentials in logs, bake them into images or put them in frontend variables. The egress network is ready; an enabled flag alone does not prove Gmail connectivity.
 
