@@ -22,7 +22,7 @@ The base Compose publishes **no ports** and uses an internal network. The local 
 
 [`deploy/README.md`](deploy/README.md) is the canonical deployment runbook. `deploy/` replaces the earlier unversioned deployment draft and owns the full stack: MariaDB, the backend Java image, and the frontend static Caddy image/gateway. The sibling application repositories own their Dockerfiles; backend Flyway remains the sole owner of application schema.
 
-- `deploy/compose.yml` publishes no host ports. MariaDB joins only the internal database network; backend joins internal API/database networks and an egress network for Gmail IMAP. The frontend gateway proxies same-origin `/api/*` requests.
+- `deploy/compose.yml` publishes no host ports. MariaDB joins only the internal database network; backend joins internal API/database networks and an egress network for Gmail IMAP and optional SMTP forwarding. The frontend gateway proxies same-origin `/api/*` requests.
 - `deploy/compose.build.yml` builds from the sibling backend/frontend checkouts when locally built images are needed.
 - `deploy/compose.loopback.yml` publishes only gateway `127.0.0.1:8088` on the VM and uses non-Secure cookies for a temporary SSH-forwarded HTTP preview. Never expose this override's HTTP service publicly.
 - `deploy/scripts/prepare.sh` runs as root, verifies `/srv/bmepilots` is mounted, preserves existing secrets, prepares persistent paths and assigns backend UID/GID `10001` permissions. It also makes the dedicated VM's Docker service require that mount.
@@ -57,5 +57,6 @@ Document and mail file bytes live outside MariaDB in the backend's private `stor
 - `AGENTS.md`: maintenance rules for humans and agents.
 - `docs/ARCHITECTURE.md`: topology, responsibilities and data conventions.
 - `docs/OPERATIONS.md`: maintenance, troubleshooting, backup and recovery.
+- `docs/MAIL_FORWARDING.md`: optional active-member email forwarding, provider limits, deployment and safe queue recovery.
 - `docs/STATUS.md`: verified state, limitations and next steps; update on every change.
 - `deploy/README.md`: canonical Ubuntu VM deployment, Cloudflare, updates and recovery runbook.
