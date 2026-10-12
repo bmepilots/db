@@ -14,6 +14,8 @@ V10 initializes forwarding **disabled**. Publishing or deploying the feature mus
 
 Only newly imported eligible messages received after the current enable time are queued. The recipient list is selected from current ACTIVE accounts for each message, so newly approved or reactivated members automatically receive future mail without maintaining a separate list. Old messages are not resent when membership changes. Pending, rejected, suspended and disabled members are excluded; membership is checked again before sending. The shared mailbox itself is excluded to prevent a forwarding loop.
 
+The shared mailbox exclusion applies to recipients. Ordinary new INBOX messages sent manually from the shared account or its aliases are eligible after the October 12 backend fix. Application-forwarded copies are recognized by their forwarding header, and automatic replies/bounces remain suppressed. Earlier versions incorrectly excluded all shared-account senders; upgrading does not replay the already imported skipped messages.
+
 Each member receives an individual copy, with the original sender information, message content and imported attachments. Community recipient addresses are not exposed as a mailing list. Existing import size/type restrictions still apply. Mail that could not be imported cannot be forwarded; inspect both import failures and forwarding failures.
 
 Disabling forwarding cancels queued work. A delivery already in progress cannot be recalled. Re-enabling starts a new eligibility window, rather than replaying the old queue. Delivery state is durable and ordinary import replays do not create another delivery for the same message/member pair. An interrupted or ambiguous SMTP submission is not automatically retried because the provider may already have accepted it. Inspect such cases before manually contacting recipients; SMTP cannot promise exactly-once delivery across a crash.
@@ -25,6 +27,8 @@ Forwarding is separate from members' private read/important flags and does not m
 Personal Gmail applies sending limits; distributing each incoming message to every active member consumes multiple outgoing messages. Google documents that sending more than 500 emails in a day can trigger a temporary restriction. This is not a guaranteed quota: delivery, anti-abuse and account restrictions can apply earlier. See [Google's sending limits](https://support.google.com/mail/answer/22839?hl=en) and [SMTP error reference](https://support.google.com/mail/answer/3726730?hl=en).
 
 If sending fails, inspect the safe error code and counts in the admin panel, then verify secret-file permissions, account access and outbound SMTP connectivity using the backend runbook. Do not print the App Password, dump private message bodies or use a broadcast to all members as a connectivity test. The existing **Test connection** action checks IMAP; it is not an SMTP-delivery test. Failed and uncertain deliveries need operator attention after bounded automatic retries; toggling forwarding does not resend them.
+
+When every delivery count is zero, check whether the outbox is empty before diagnosing SMTP. Verify the enable cutoff, ACTIVE recipients, IMAP status and newly imported INBOX message receive times; pre-cutoff mail, prior imports and loop-protected messages create no deliveries. Read-only diagnosis should use timestamps, aggregate counts and classification flags rather than message bodies or recipient lists. See backend STATUS for the October 12 confirmed shared-sender incident and its rollout evidence.
 
 ## Backup and restore
 
