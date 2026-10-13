@@ -41,3 +41,7 @@ Root-managed scripts select the machine-local mode, release.env image digests an
 Backend V10 introduces optional active-member email forwarding with a durable SQL queue and an administrator toggle that defaults to disabled. It reuses the existing Gmail secret and backend egress; database network exposure and file volumes are unchanged. SMTP copies use existing imported attachments. Application database backups include queue/settings/history, but restoring an older snapshot cannot undo externally delivered email: keep `MAIL_ENABLED=false` during recovery and reconcile forwarding before reconnecting. See [MAIL_FORWARDING.md](MAIL_FORWARDING.md) for release and recovery procedures. Backend contract `4` and frontend requirement `4` let the existing image updater guard this API addition.
 
 The MariaDB image is pinned to a patch version. Upgrade deliberately: inspect release notes, make and verify a backup, test schema and app against the new image, and document the new version and verification. Never blindly downgrade a data directory.
+
+## Exam prep — API contract 5
+
+The new Exam prep area provides 38 original engineering exercises, an interactive circuit explorer, Learn/Practice/Mock exam flows and private saved results. Backend Flyway V11 owns study-attempt storage; Docker MariaDB and existing backups are reused. See `STUDY.md` for source analysis, ownership, grading, extension and operational details. Local implementation does not imply deployment; consult STATUS for evidence.

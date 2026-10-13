@@ -60,3 +60,7 @@ Document and mail file bytes live outside MariaDB in the backend's private `stor
 - `docs/MAIL_FORWARDING.md`: optional active-member email forwarding, provider limits, deployment and safe queue recovery.
 - `docs/STATUS.md`: verified state, limitations and next steps; update on every change.
 - `deploy/README.md`: canonical Ubuntu VM deployment, Cloudflare, updates and recovery runbook.
+
+## Exam prep — API contract 5
+
+The new Exam prep area provides 38 original engineering exercises, an interactive circuit explorer, Learn/Practice/Mock exam flows and private saved results. Backend Flyway V11 owns study-attempt storage; Docker MariaDB and existing backups are reused. See `docs/STUDY.md` for source analysis, ownership, grading, extension and operational details. Local implementation does not imply deployment; consult STATUS for evidence.
