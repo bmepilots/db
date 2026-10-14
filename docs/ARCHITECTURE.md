@@ -45,3 +45,7 @@ The MariaDB image is pinned to a patch version. Upgrade deliberately: inspect re
 ## Exam prep — API contract 5
 
 The new Exam prep area provides 38 original engineering exercises, an interactive circuit explorer, Learn/Practice/Mock exam flows and private saved results. Backend Flyway V11 owns study-attempt storage; Docker MariaDB and existing backups are reused. See `STUDY.md` for source analysis, ownership, grading, extension and operational details. Local implementation does not imply deployment; consult STATUS for evidence.
+
+## Shared mail moderation — V12
+
+Backend-owned Flyway V12 stores shared importance, moderation version and deletion timestamp on mail_messages. Deleted portal messages retain provider identities, content and attachments for synchronization deduplication, in-flight forwarding and coordinated backup consistency. There is no new volume, database engine change or automatic purge. See [MAIL_MODERATION.md](MAIL_MODERATION.md) for retention, restore and contract-6 rollout boundaries.
