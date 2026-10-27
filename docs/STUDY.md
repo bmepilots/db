@@ -23,3 +23,7 @@ Backend supports contracts `1,2,3,4,5`; frontend requires `5`. The existing upda
 Verify V11 and application health after a future rollout. For local verification use the isolated `compose.test.yml` tmpfs database on3308, never persistent development3307. Keep `MAIL_ENABLED=false` for tests and restores; study verification does not require sending any email. Source/architecture and exact API behavior are in backend `docs/STUDY.md` and frontend `docs/STUDY.md`. Consult their STATUS files for actual test results and deployment evidence.
 
 The preexisting unactivated Proxmox backup preparation is a separate task and is not changed by this feature.
+
+## Study progress — contract 7 (2026-10-27)
+
+Per-task completion, attempt count and best scores are derived from existing study_attempts result_json using MariaDB JSON_TABLE, scoped to owner/subject/current catalog version. No new table, migration, volume, backfill or backup change is required. Existing attempts remain the source of truth; the recent-history display limit does not cap progress. Backups already contain everything required. Backend supports contracts 1–7; the matching frontend requires 7. See backend/frontend STUDY documentation for score, timestamp and navigation semantics.

@@ -49,3 +49,5 @@ The new Exam prep area provides 38 original engineering exercises, an interactiv
 ## Shared mail moderation — V12
 
 Backend-owned Flyway V12 stores shared importance, moderation version and deletion timestamp on mail_messages. Deleted portal messages retain provider identities, content and attachments for synchronization deduplication, in-flight forwarding and coordinated backup consistency. There is no new volume, database engine change or automatic purge. See [MAIL_MODERATION.md](MAIL_MODERATION.md) for retention, restore and contract-6 rollout boundaries.
+
+Study contract 7 derives task progress from the existing saved-result JSON, without changing the schema or backup scope. Owner/current-version filtering prevents cross-member leakage and incompatible grading totals. See STUDY for the storage/compatibility boundary.
