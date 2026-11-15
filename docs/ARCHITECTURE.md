@@ -51,3 +51,7 @@ The new Exam prep area provides 38 original engineering exercises, an interactiv
 Backend-owned Flyway V12 stores shared importance, moderation version and deletion timestamp on mail_messages. Deleted portal messages retain provider identities, content and attachments for synchronization deduplication, in-flight forwarding and coordinated backup consistency. There is no new volume, database engine change or automatic purge. See [MAIL_MODERATION.md](MAIL_MODERATION.md) for retention, restore and contract-6 rollout boundaries.
 
 Study contract 7 derives task progress from the existing saved-result JSON, without changing the schema or backup scope. Owner/current-version filtering prevents cross-member leakage and incompatible grading totals. See STUDY for the storage/compatibility boundary.
+
+## Study midterms — V13
+
+Backend-owned V13 adds midterm_id (default 1) and an owner/subject/midterm/history index to study_attempts. Existing result JSON stays immutable. New weighted mechanics attempts, chart snapshots and scoped progress reuse existing SQL storage and backups; no infrastructure service, secret or volume is added. Backend contract 8 and frontend requirement 8 coordinate the rollout. See STUDY_MIDTERM_2 for compatibility and restore details.

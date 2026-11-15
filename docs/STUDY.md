@@ -27,3 +27,7 @@ The preexisting unactivated Proxmox backup preparation is a separate task and is
 ## Study progress — contract 7 (2026-10-27)
 
 Per-task completion, attempt count and best scores are derived from existing study_attempts result_json using MariaDB JSON_TABLE, scoped to owner/subject/current catalog version. No new table, migration, volume, backfill or backup change is required. Existing attempts remain the source of truth; the recent-history display limit does not cap progress. Backups already contain everything required. Backend supports contracts 1–7; the matching frontend requires 7. See backend/frontend STUDY documentation for score, timestamp and navigation semantics.
+
+## Second midterm
+
+See [STUDY_MIDTERM_2.md](STUDY_MIDTERM_2.md) for V13, preserved first-midterm records, weighted results and contract-8 rollout/backup requirements.

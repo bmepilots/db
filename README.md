@@ -64,3 +64,7 @@ Document and mail file bytes live outside MariaDB in the backend's private `stor
 ## Exam prep — API contract 5
 
 The new Exam prep area provides 38 original engineering exercises, an interactive circuit explorer, Learn/Practice/Mock exam flows and private saved results. Backend Flyway V11 owns study-attempt storage; Docker MariaDB and existing backups are reused. See `docs/STUDY.md` for source analysis, ownership, grading, extension and operational details. Local implementation does not imply deployment; consult STATUS for evidence.
+
+## Second engineering midterm
+
+Backend Flyway V13 adds midterm scope to saved study attempts, preserving existing electrical results as midterm 1. Weighted mechanics results use the same Docker MariaDB and coordinated SQL backup. No ports, volumes or secrets change. Backend supports contracts 1–8; the matching frontend requires 8. See [STUDY_MIDTERM_2.md](docs/STUDY_MIDTERM_2.md) for migration, backup and rollout boundaries.
